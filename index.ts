@@ -4,23 +4,21 @@ const whiteLabelKeys = await generateKeyValuePair();
 const WHITE_LABEL_PRIVATE_KEY = whiteLabelKeys.privateKey;
 const WHITE_LABEL_PUBLIC_KEY = whiteLabelKeys.publicKey;
 
-function combine(...keys: string[]) {
-    return keys.join(":");
-}
-
 // on white-label server
 async function generateScopeKey(scope: string) {
+    // scope should only contain letters, numbers, and dashes
+    if (!/^[a-zA-Z0-9-]+$/.test(scope)) throw new Error("Invalid scope");
     const pair = await generateKeyValuePair();
-    const data = combine(scope, pair.publicKey);
+    const data = [scope, pair.publicKey].join(":");
     const signature = await sign(data, WHITE_LABEL_PRIVATE_KEY);
-    return combine(scope, pair.privateKey, pair.publicKey, signature);
+    return [scope, pair.privateKey, pair.publicKey, signature].join(":");
 }
 
 // on Grip side
 async function signWithScopeKey(data: any, scopeKey: string) {
     const [scope, privateKey, publicKey, publicKeySignature] = scopeKey.split(":");
     const signature = await sign(data, privateKey);
-    return combine(scope, signature, publicKey, publicKeySignature);
+    return [scope, signature, publicKey, publicKeySignature].join(":");
 }
 
 // on designer side + on "send-data", etc. side
@@ -28,7 +26,7 @@ async function getVerifiedScopeForData(data: any, signature: string): Promise<st
     const sigCombined = signature;
     const [scope, dataSignature, publicKey, publicKeySignature] = sigCombined.split(":");
     if (!(await verify(data, publicKey, dataSignature))) throw new Error("Invalid signature");
-    if (!(await verify(combine(scope, publicKey), WHITE_LABEL_PUBLIC_KEY, publicKeySignature)))
+    if (!(await verify([scope, publicKey].join(":"), WHITE_LABEL_PUBLIC_KEY, publicKeySignature)))
         throw new Error("Invalid public key and scope signature");
 
     return scope;
