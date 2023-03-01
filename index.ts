@@ -5,7 +5,7 @@ const WHITE_LABEL_PRIVATE_KEY = whiteLabelKeys.privateKey;
 const WHITE_LABEL_PUBLIC_KEY = whiteLabelKeys.publicKey;
 
 // on white-label server
-async function generateScopeKey(scope: string) {
+async function generateScopeSecret(scope: string) {
     // scope should only contain letters, numbers, and dashes
     if (!/^[a-zA-Z0-9-]+$/.test(scope)) throw new Error("Invalid scope");
     const pair = await generateKeyValuePair();
@@ -15,7 +15,7 @@ async function generateScopeKey(scope: string) {
 }
 
 // on Grip side
-async function signWithScopeKey(data: any, scopeKey: string) {
+async function signWithScopeSecret(data: any, scopeKey: string) {
     const [scope, privateKey, publicKey, publicKeySignature] = scopeKey.split(":");
     const signature = await sign(data, privateKey);
     return [scope, signature, publicKey, publicKeySignature].join(":");
@@ -32,9 +32,9 @@ async function getVerifiedScopeForData(data: any, signature: string): Promise<st
     return scope;
 }
 
-const gripSecret = await generateScopeKey("grip");
+const gripSecret = await generateScopeSecret("grip");
 console.log(gripSecret);
-const signature = await signWithScopeKey({ expo: 22 }, gripSecret);
+const signature = await signWithScopeSecret({ expo: 22 }, gripSecret);
 console.log(signature);
 const verifiedScope = await getVerifiedScopeForData({ expo: 22 }, signature);
 console.log("verified scope:", verifiedScope);
