@@ -23,7 +23,7 @@ async function signWithScopeKey(data: any, scopeKey: string) {
     return combine(scope, signature, publicKey, publicKeySignature);
 }
 
-// on designer side
+// on designer side + on "send-data", etc. side
 async function getVerifiedScopeForData(data: any, signature: string): Promise<string> {
     const sigCombined = signature;
     const [scope, dataSignature, publicKey, publicKeySignature] = sigCombined.split(":");
