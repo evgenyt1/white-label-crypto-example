@@ -9,6 +9,7 @@ async function generateScopeSecret(scope: string) {
     // scope should only contain letters, numbers, and dashes
     if (!/^[a-zA-Z0-9-]+$/.test(scope)) throw new Error("Invalid scope");
     const pair = await generateKeyValuePair();
+    // sign scope + public key
     const publicKeyScopeSignature = await sign([scope, pair.publicKey], WHITE_LABEL_PRIVATE_KEY);
     return [scope, pair.privateKey, pair.publicKey, publicKeyScopeSignature].join(":");
 }
