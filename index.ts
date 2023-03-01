@@ -9,8 +9,7 @@ async function generateScopeSecret(scope: string) {
     // scope should only contain letters, numbers, and dashes
     if (!/^[a-zA-Z0-9-]+$/.test(scope)) throw new Error("Invalid scope");
     const pair = await generateKeyValuePair();
-    const data = [scope, pair.publicKey].join(":");
-    const signature = await sign(data, WHITE_LABEL_PRIVATE_KEY);
+    const signature = await sign([scope, pair.publicKey], WHITE_LABEL_PRIVATE_KEY);
     return [scope, pair.privateKey, pair.publicKey, signature].join(":");
 }
 
@@ -18,15 +17,15 @@ async function generateScopeSecret(scope: string) {
 async function signWithScopeSecret(data: any, scopeKey: string) {
     const [scope, privateKey, publicKey, publicKeySignature] = scopeKey.split(":");
     const signature = await sign(data, privateKey);
-    return [scope, signature, publicKey, publicKeySignature].join(":");
+    return [signature, scope, publicKey, publicKeySignature].join(":");
 }
 
 // on designer side + on "send-data", etc. side
 async function getVerifiedScopeForData(data: any, signature: string): Promise<string> {
     const sigCombined = signature;
-    const [scope, dataSignature, publicKey, publicKeySignature] = sigCombined.split(":");
+    const [dataSignature, scope, publicKey, publicKeyScopeSignature] = sigCombined.split(":");
     if (!(await verify(data, publicKey, dataSignature))) throw new Error("Invalid signature");
-    if (!(await verify([scope, publicKey].join(":"), WHITE_LABEL_PUBLIC_KEY, publicKeySignature)))
+    if (!(await verify([scope, publicKey], WHITE_LABEL_PUBLIC_KEY, publicKeyScopeSignature)))
         throw new Error("Invalid public key and scope signature");
 
     return scope;
