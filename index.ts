@@ -9,8 +9,8 @@ async function generateScopeSecret(scope: string) {
     // scope should only contain letters, numbers, and dashes
     if (!/^[a-zA-Z0-9-]+$/.test(scope)) throw new Error("Invalid scope");
     const pair = await generateKeyValuePair();
-    const signature = await sign([scope, pair.publicKey], WHITE_LABEL_PRIVATE_KEY);
-    return [scope, pair.privateKey, pair.publicKey, signature].join(":");
+    const publicKeyScopeSignature = await sign([scope, pair.publicKey], WHITE_LABEL_PRIVATE_KEY);
+    return [scope, pair.privateKey, pair.publicKey, publicKeyScopeSignature].join(":");
 }
 
 // on Grip side
