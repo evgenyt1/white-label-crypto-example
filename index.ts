@@ -24,7 +24,9 @@ async function signWithScopeSecret(data: any, scopeKey: string) {
 async function getVerifiedScopeForData(data: any, signature: string): Promise<string> {
     const sigCombined = signature;
     const [dataSignature, scope, publicKey, publicKeyScopeSignature] = sigCombined.split(":");
+    // check data signature
     if (!(await verify(data, publicKey, dataSignature))) throw new Error("Invalid signature");
+    // check public key + scope signature
     if (!(await verify([scope, publicKey], WHITE_LABEL_PUBLIC_KEY, publicKeyScopeSignature)))
         throw new Error("Invalid public key and scope signature");
 
