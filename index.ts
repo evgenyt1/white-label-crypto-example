@@ -19,7 +19,6 @@ async function generateScopeKey(scope: string) {
 // on Grip side
 async function signWithScopeKey(data: any, scopeKey: string) {
     const [scope, privateKey, publicKey, publicKeySignature] = scopeKey.split(":");
-    // if (data.scope !== scope) throw new Error("Data scope does not match secret key scope");
     const signature = await sign(data, privateKey);
     return combine(scope, signature, publicKey, publicKeySignature);
 }
@@ -30,7 +29,7 @@ async function getVerifiedScopeForData(data: any, signature: string): Promise<st
     const [scope, dataSignature, publicKey, publicKeySignature] = sigCombined.split(":");
     if (!(await verify(data, publicKey, dataSignature))) throw new Error("Invalid signature");
     if (!(await verify(combine(scope, publicKey), WHITE_LABEL_PUBLIC_KEY, publicKeySignature)))
-        throw new Error("Invalid public key signature");
+        throw new Error("Invalid public key and scope signature");
 
     return scope;
 }
