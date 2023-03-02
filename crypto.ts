@@ -1,4 +1,5 @@
-import { subtle } from "node:crypto";
+const subtle =
+    typeof crypto !== "undefined" ? crypto.subtle : await import("node:crypto").then(crypto => crypto.subtle);
 
 export async function generateKeyValuePair() {
     const pair = await subtle.generateKey(
@@ -18,18 +19,30 @@ export async function generateKeyValuePair() {
     };
 }
 
+function arrayToBase64String(array: ArrayBuffer) {
+    return typeof Buffer !== "undefined"
+        ? Buffer.from(array).toString("base64")
+        : btoa(String.fromCharCode(...new Uint8Array(array)));
+}
+
+function base64StringToArray(str: string): ArrayBuffer {
+    return typeof Buffer !== "undefined"
+        ? Buffer.from(str, "base64")
+        : Uint8Array.from(atob(str), c => c.charCodeAt(0)).buffer;
+}
+
 async function privateKeyToString(key: CryptoKey) {
-    return Buffer.from(await subtle.exportKey("pkcs8", key)).toString("base64");
+    return arrayToBase64String(await subtle.exportKey("pkcs8", key));
 }
 
 async function publicKeyToString(key: CryptoKey) {
-    return Buffer.from(await subtle.exportKey("spki", key)).toString("base64");
+    return arrayToBase64String(await subtle.exportKey("spki", key));
 }
 
 async function stringToPrivateKey(key: string) {
     return subtle.importKey(
         "pkcs8",
-        Buffer.from(key, "base64"),
+        base64StringToArray(key),
         {
             name: "RSA-PSS",
             hash: "SHA-256",
@@ -42,7 +55,7 @@ async function stringToPrivateKey(key: string) {
 async function stringToPublicKey(key: string) {
     return subtle.importKey(
         "spki",
-        Buffer.from(key, "base64"),
+        base64StringToArray(key),
         {
             name: "RSA-PSS",
             hash: "SHA-256",
@@ -59,10 +72,10 @@ export async function sign(data: any, privateKey: string): Promise<string> {
             saltLength: 32,
         },
         await stringToPrivateKey(privateKey),
-        Buffer.from(JSON.stringify(data))
+        new TextEncoder().encode(JSON.stringify(data))
     );
 
-    return Buffer.from(signature).toString("base64");
+    return arrayToBase64String(signature);
 }
 
 export async function verify(data: any, publicKey: string, signature: string): Promise<boolean> {
@@ -72,8 +85,8 @@ export async function verify(data: any, publicKey: string, signature: string): P
             saltLength: 32,
         },
         await stringToPublicKey(publicKey),
-        Buffer.from(signature, "base64"),
-        Buffer.from(JSON.stringify(data))
+        base64StringToArray(signature),
+        new TextEncoder().encode(JSON.stringify(data))
     );
 }
 
