@@ -5,7 +5,7 @@
     "main": "index.js",
     "type": "module",
     "scripts": {
-        "test-browser": "vite",
+        "test-browser": "vite --open",
         "test": "tsx watch index.ts"
     },
     "keywords": [],
